@@ -25,5 +25,25 @@
         }
       ]
     }
+  },
+  "GET /api/articles/:article_id": {
+    "description": "fetches an article by its id",
+    "response": {
+      "status": 200,
+      "body": {
+        "article_id": "integer",
+        "title": "string",
+        "topic": "string",
+        "author": "string",
+        "body": "string",
+        "created_at": "string",
+        "votes": "integer",
+        "article_img_url": "string"
+      },
+      "errors": {
+        "400": "Bad request - if the article_id is not a valid number",
+        "404": "Not found - if no article is found with the given article_id"
+      }
+    }
   }
 }
