@@ -45,6 +45,42 @@ describe("GET /api/topics", () => {
   });
 });
 
+describe("GET /api/articles/:article_id", () => {
+  test("200: responds with an article object when given valid article id", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.article).toHaveProperty("author");
+        expect(body.article).toHaveProperty("title");
+        expect(body.article).toHaveProperty("article_id");
+        expect(body.article).toHaveProperty("body");
+        expect(body.article).toHaveProperty("topic");
+        expect(body.article).toHaveProperty("created_at");
+        expect(body.article).toHaveProperty("votes");
+        expect(body.article).toHaveProperty("article_img_url");
+      });
+  });
+
+  test("404: responds with an error when trying to get an article id that does not exist", () => {
+    return request(app)
+      .get("/api/articles/10000")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Article with id 10000 not found");
+      });
+  });
+
+  test("400: responds with an error if the article id is invalid", () => {
+    return request(app)
+      .get("/api/articles/notAnId")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid article id format");
+      });
+  });
+});
+
 describe("GET *", () => {
   test("404: responds with an error if the route does not exist", () => {
     return request(app)

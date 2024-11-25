@@ -1,12 +1,18 @@
 const express = require("express");
-const { getApi, getTopics } = require("./controller/api.controller");
-const { handleCustomErrors, handleServerErrors } = require("./errors/index");
+const {
+  getApi,
+  getTopics,
+  getArticleById,
+} = require("./controller/nc-news.controller");
+const { handleCustomErrors, handleServerErrors } = require("./errors/errorHandling");
 
 const app = express();
 
 app.get("/api", getApi);
 
 app.get("/api/topics", getTopics);
+
+app.get("/api/articles/:article_id", getArticleById);
 
 app.use((req, res, next) => {
   const err = { status: 404, msg: "404 Not Found" };
