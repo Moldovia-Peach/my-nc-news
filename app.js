@@ -1,23 +1,19 @@
 const express = require("express");
 const { getApi, getTopics } = require("./controller/api.controller");
+const { handleCustomErrors, handleServerErrors } = require("./errors/index");
 
 const app = express();
-app.use(express.json());
 
 app.get("/api", getApi);
 
 app.get("/api/topics", getTopics);
 
-app.use((req, res) => {
-  res.status(404).send({ msg: "route not found" });
+app.use((req, res, next) => {
+  const err = { status: 404, msg: "404 Not Found" };
+  next(err);
 });
 
-app.use((err, req, res, next) => {
-  if (err.status && err.msg) {
-    res.status(err.status).send({ msg: err.msg });
-  } else {
-    res.status(500).send({ msg: "server error" });
-  }
-});
+app.use(handleCustomErrors);
+app.use(handleServerErrors);
 
 module.exports = app;

@@ -10,7 +10,7 @@ beforeEach(() => {
 });
 
 afterAll(() => {
-  db.end();
+  return db.end();
 });
 
 describe("GET /api", () => {
@@ -30,6 +30,7 @@ describe("GET /api/topics", () => {
       .get("/api/topics")
       .expect(200)
       .then(({ body }) => {
+        expect(body.topics).toHaveLength(3);
         expect(body.topics).toBeInstanceOf(Array);
 
         body.topics.forEach((topic) => {
@@ -42,12 +43,15 @@ describe("GET /api/topics", () => {
         });
       });
   });
-  test("404: responds with an error if the topic is not found", () => {
+});
+
+describe("GET *", () => {
+  test("404: responds with an error if the route does not exist", () => {
     return request(app)
-      .get("/api/nonexistent")
+      .get("/api/notARoute")
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("route not found");
+        expect(body.msg).toBe("404 Not Found");
       });
   });
 });
