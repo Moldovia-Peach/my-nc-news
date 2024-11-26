@@ -48,5 +48,25 @@
         "404": "responds with an error if no article is found with the given article_id"
       }
     }
+  },
+  "GET /api/articles/:article_id/comments": {
+    "description": "serves all comments for an article, sorted by most recent comment",
+    "queries": [],
+    "exampleResponse": {
+      "comments": [
+        {
+          "comment_id": 1,
+          "votes": 100,
+          "created_at": "2024-26-11T13:04:08.000Z",
+          "author": "mollyh",
+          "body": "Wow. I think this is great!",
+          "article_id": 1
+        }
+      ]
+    },
+    "errors": {
+      "400": "responds with an error if the article_id is not valid",
+      "404": "responds with an error if no comments are found for the article"
+    }
   }
 }
