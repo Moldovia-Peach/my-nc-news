@@ -81,6 +81,56 @@ describe("GET /api/articles/:article_id", () => {
   });
 });
 
+describe("GET /api/articles", () => {
+  test("200: responds with an array of articles containing the correct properties", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        expect(Array.isArray(body.articles)).toBe(true);
+        expect(body.articles).toHaveLength(13);
+        body.articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              article_id: expect.any(Number),
+              author: expect.any(String),
+              title: expect.any(String),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              article_img_url: expect.any(String),
+              comment_count: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("200: responds with articles sorted by created_at in descending order", () => {
+    return request(app)
+      .get("/api/articles")
+      .then((response) => {
+        const body = response.body;
+        for (let i = 0; i < body.articles.length - 1; i++) {
+          const currentArticleDate = new Date(
+            body.articles[i].created_at
+          ).getTime();
+          const nextArticleDate = new Date(
+            body.articles[i + 1].created_at
+          ).getTime();
+          expect(currentArticleDate).toBeGreaterThanOrEqual(nextArticleDate);
+        }
+      });
+  });
+  test("400: responds with error when invalid query parameters are passed", () => {
+    return request(app)
+      .get("/api/articles?sort=invalid")
+      .then((response) => {
+        expect(response.status).toBe(400);
+        expect(response.body.msg).toBe("Invalid query parameter");
+      });
+  });
+});
+
 describe("GET *", () => {
   test("404: responds with an error if the route does not exist", () => {
     return request(app)
