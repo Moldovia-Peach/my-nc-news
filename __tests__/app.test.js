@@ -131,6 +131,58 @@ describe("GET /api/articles", () => {
   });
 });
 
+describe("GET /api/articles/:article_id/comments", () => {
+  test("200: responds with array of comments for the article", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(Array.isArray(body.comments)).toBe(true);
+        expect(body.comments.length).toBeGreaterThan(0);
+        expect(body.comments[0]).toHaveProperty("comment_id");
+        expect(body.comments[0]).toHaveProperty("votes");
+        expect(body.comments[0]).toHaveProperty("created_at");
+        expect(body.comments[0]).toHaveProperty("author");
+        expect(body.comments[0]).toHaveProperty("body");
+        expect(body.comments[0]).toHaveProperty("article_id");
+      });
+  });
+
+  test("200: responds with comments sorted by most recent first", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        const comments = body.comments;
+        for (let i = 0; i < comments.length - 1; i++) {
+          const currentCommentDate = new Date(comments[i].created_at).getTime();
+          const nextCommentDate = new Date(
+            comments[i + 1].created_at
+          ).getTime();
+          expect(currentCommentDate).toBeGreaterThanOrEqual(nextCommentDate);
+        }
+      });
+  });
+
+  test("404: responds with an error if no comments are found for the given article_id", () => {
+    return request(app)
+      .get("/api/articles/1000/comments")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("No comments found for article 1000");
+      });
+  });
+
+  test("400: responds with an error if the article_id is invalid", () => {
+    return request(app)
+      .get("/api/articles/notAnId/comments")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid article id format");
+      });
+  });
+});
+
 describe("GET *", () => {
   test("404: responds with an error if the route does not exist", () => {
     return request(app)

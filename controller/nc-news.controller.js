@@ -3,6 +3,7 @@ const {
   fetchTopics,
   fetchArticleById,
   fetchAllArticles,
+  fetchCommentsByArticleId,
 } = require("../model/nc-news.model");
 
 function getApi(req, res) {
@@ -55,4 +56,27 @@ function getAllArticles(req, res, next) {
     .catch(next);
 }
 
-module.exports = { getApi, getTopics, getArticleById, getAllArticles };
+function getCommentsByArticeId(req, res, next) {
+  const { article_id } = req.params;
+  if (isNaN(Number(article_id))) {
+    handleError(400, "Invalid article id format", next);
+    return;
+  }
+  fetchCommentsByArticleId(article_id)
+    .then((comments) => {
+      if (!comments || comments.length === 0) {
+        handleError(404, `No comments found for article ${article_id}`, next);
+        return;
+      }
+      res.status(200).send({ comments });
+    })
+    .catch(next);
+}
+
+module.exports = {
+  getApi,
+  getTopics,
+  getArticleById,
+  getAllArticles,
+  getCommentsByArticeId,
+};
