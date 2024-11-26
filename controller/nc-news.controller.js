@@ -1,5 +1,9 @@
 const endpointsJson = require("../endpoints.json");
-const { fetchTopics, fetchArticleById } = require("../model/nc-news.model");
+const {
+  fetchTopics,
+  fetchArticleById,
+  fetchAllArticles,
+} = require("../model/nc-news.model");
 
 function getApi(req, res) {
   res.status(200).send({ endpoints: endpointsJson });
@@ -34,4 +38,21 @@ function getArticleById(req, res, next) {
     .catch(next);
 }
 
-module.exports = { getApi, getTopics, getArticleById };
+function getAllArticles(req, res, next) {
+  const { sort } = req.query;
+  if (sort && !["created_at", "title", "votes"].includes(sort)) {
+    handleError(400, "Invalid query parameter", next);
+    return;
+  }
+  fetchAllArticles()
+    .then((articles) => {
+      if (!articles || articles.length === 0) {
+        handleError(404, "No articles found", next);
+        return;
+      }
+      res.status(200).send({ articles });
+    })
+    .catch(next);
+}
+
+module.exports = { getApi, getTopics, getArticleById, getAllArticles };

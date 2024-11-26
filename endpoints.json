@@ -23,7 +23,10 @@
           "votes": 0,
           "comment_count": 6
         }
-      ]
+      ],
+      "errors": {
+        "400": "responds with an error if invalid query parameters are passed"
+      }
     }
   },
   "GET /api/articles/:article_id": {
@@ -41,8 +44,8 @@
         "article_img_url": "string"
       },
       "errors": {
-        "400": "Bad request - if the article_id is not a valid number",
-        "404": "Not found - if no article is found with the given article_id"
+        "400": "responds with an error if the article_id is not a valid number",
+        "404": "responds with an error if no article is found with the given article_id"
       }
     }
   }
