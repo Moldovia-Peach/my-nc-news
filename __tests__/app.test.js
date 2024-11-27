@@ -379,3 +379,34 @@ describe("PATCH /api/articles/:article_id", () => {
     });
   });
 });
+
+describe("DELETE /api/comments/:comment_id", () => {
+  test("204: deletes a comment and responds with no content", () => {
+    return request(app)
+      .delete("/api/comments/1")
+      .expect(204)
+      .then((response) => {
+        expect(response.body).toEqual({});
+      });
+  });
+  describe("404 errors", () => {
+    test("404: responds with an error when trying to delete a non-existent comment_id", () => {
+      return request(app)
+        .delete("/api/comments/9999")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Comment with id 9999 not found");
+        });
+    });
+  });
+  describe("400 errors", () => {
+    test("400: responds with an error if comment_id is not valid", () => {
+      return request(app)
+        .delete("/api/comments/not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid comment id format");
+        });
+    });
+  });
+});

@@ -122,5 +122,16 @@
       ],
       "404": "responds with an error if no article is found"
     }
+  },
+  "DELETE /api/comments/:comment_id": {
+    "description": "deletes comment for given comment_id",
+    "response": {
+      "status": 204,
+      "body": null
+    },
+    "errors": {
+      "400": "responds with an error if the comment_id is invalid",
+      "404": "responds with an error if no comment exists for given comment_id"
+    }
   }
 }
