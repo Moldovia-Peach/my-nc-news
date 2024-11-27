@@ -61,23 +61,25 @@ describe("GET /api/articles/:article_id", () => {
         expect(body.article).toHaveProperty("article_img_url");
       });
   });
-
-  test("404: responds with an error when trying to get an article id that does not exist", () => {
-    return request(app)
-      .get("/api/articles/10000")
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Article with id 10000 not found");
-      });
+  describe("404 errors", () => {
+    test("404: responds with an error when trying to get an article id that does not exist", () => {
+      return request(app)
+        .get("/api/articles/10000")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Article with id 10000 not found");
+        });
+    });
   });
-
-  test("400: responds with an error if the article id is invalid", () => {
-    return request(app)
-      .get("/api/articles/notAnId")
-      .expect(400)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Invalid article id format");
-      });
+  describe("400 errors", () => {
+    test("400: responds with an error if the article id is invalid", () => {
+      return request(app)
+        .get("/api/articles/notAnId")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid article id format");
+        });
+    });
   });
 });
 
@@ -121,13 +123,15 @@ describe("GET /api/articles", () => {
         }
       });
   });
-  test("400: responds with error when invalid query parameters are passed", () => {
-    return request(app)
-      .get("/api/articles?sort=invalid")
-      .then((response) => {
-        expect(response.status).toBe(400);
-        expect(response.body.msg).toBe("Invalid query parameter");
-      });
+  describe("400 errors", () => {
+    test("400: responds with error when invalid query parameters are passed", () => {
+      return request(app)
+        .get("/api/articles?sort=invalid")
+        .then((response) => {
+          expect(response.status).toBe(400);
+          expect(response.body.msg).toBe("Invalid query parameter");
+        });
+    });
   });
 });
 
@@ -204,23 +208,25 @@ describe("GET /api/articles/:article_id/comments", () => {
         expect(body.comments).toEqual([]);
       });
   });
-
-  test("404: responds with an error if the article does not exist", () => {
-    return request(app)
-      .get("/api/articles/1000/comments")
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Article with id 1000 not found");
-      });
+  describe("404 errors", () => {
+    test("404: responds with an error if the article does not exist", () => {
+      return request(app)
+        .get("/api/articles/1000/comments")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Article with id 1000 not found");
+        });
+    });
   });
-
-  test("400: responds with an error if the article_id is invalid", () => {
-    return request(app)
-      .get("/api/articles/notAnId/comments")
-      .expect(400)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Invalid article id format");
-      });
+  describe("400 errors", () => {
+    test("400: responds with an error if the article_id is invalid", () => {
+      return request(app)
+        .get("/api/articles/notAnId/comments")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid article id format");
+        });
+    });
   });
 });
 
@@ -248,64 +254,128 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(response.body.comment.body).toBe("Wow! This is amazing!");
       });
   });
+  describe("400 errors", () => {
+    test("400: returns an error if the request body is empty", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({})
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Username and body are required");
+        });
+    });
 
-  test("400: returns an error if the request body is empty", () => {
+    test("400: returns an error if username is missing", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ body: "Wow! This is amazing!" })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Username and body are required");
+        });
+    });
+
+    test("400: returns an error if comment body is missing", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "butter_bridge" })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Username and body are required");
+        });
+    });
+
+    test("400: returns an error if the article_id is invalid", () => {
+      return request(app)
+        .post("/api/articles/notAnId/comments")
+        .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid article id format");
+        });
+    });
+  });
+  describe("404 errors", () => {
+    test("404: returns an error if the article does not exist", () => {
+      return request(app)
+        .post("/api/articles/1000/comments")
+        .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Article with id 1000 not found");
+        });
+    });
+
+    test("404: returns an error if the username does not exist", () => {
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send({ username: "nonexistent_user", body: "Wow! This is amazing!" })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Username does not exist");
+        });
+    });
+  });
+});
+
+describe("PATCH /api/articles/:article_id", () => {
+  test("200: increments article votes", () => {
     return request(app)
-      .post("/api/articles/1/comments")
-      .send({})
-      .expect(400)
+      .patch("/api/articles/1")
+      .send({ inc_votes: 1 })
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe("Username and body are required");
+        expect(body.article.article_id).toBe(1);
+        expect(body.article.title).toBe("Living in the shadow of a great man");
+        expect(body.article.topic).toBe("mitch");
+        expect(body.article.author).toBe("butter_bridge");
+        expect(body.article.votes).toBe(101);
       });
   });
 
-  test("400: returns an error if username is missing", () => {
+  test("200: decrements article votes", () => {
     return request(app)
-      .post("/api/articles/1/comments")
-      .send({ body: "Wow! This is amazing!" })
-      .expect(400)
+      .patch("/api/articles/1")
+      .send({ inc_votes: -1 })
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe("Username and body are required");
+        expect(body.article.article_id).toBe(1);
+        expect(body.article.title).toBe("Living in the shadow of a great man");
+        expect(body.article.topic).toBe("mitch");
+        expect(body.article.author).toBe("butter_bridge");
+        expect(body.article.votes).toBe(99);
       });
   });
+  describe("400 errors", () => {
+    test("400: responds with an error for invalid inc_votes", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({ inc_votes: "string" })
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid vote value");
+        });
+    });
 
-  test("400: returns an error if comment body is missing", () => {
-    return request(app)
-      .post("/api/articles/1/comments")
-      .send({ username: "butter_bridge" })
-      .expect(400)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Username and body are required");
-      });
+    test("400: responds with an error if the body does not contain the correct fields", () => {
+      return request(app)
+        .patch("/api/articles/1")
+        .send({})
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid vote value");
+        });
+    });
   });
-
-  test("400: returns an error if the article_id is invalid", () => {
-    return request(app)
-      .post("/api/articles/notAnId/comments")
-      .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
-      .expect(400)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Invalid article id format");
-      });
-  });
-
-  test("404: returns an error if the article does not exist", () => {
-    return request(app)
-      .post("/api/articles/1000/comments")
-      .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Article with id 1000 not found");
-      });
-  });
-
-  test("404: returns an error if the username does not exist", () => {
-    return request(app)
-      .post("/api/articles/1/comments")
-      .send({ username: "nonexistent_user", body: "Wow! This is amazing!" })
-      .expect(404)
-      .then(({ body }) => {
-        expect(body.msg).toBe("Username does not exist");
-      });
+  describe("404 errors", () => {
+    test("404: responds with an error if article_id does not exist", () => {
+      return request(app)
+        .patch("/api/articles/10000")
+        .send({ inc_votes: 1 })
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Article not found");
+        });
+    });
   });
 });

@@ -6,6 +6,7 @@ const {
   getAllArticles,
   getCommentsByArticleId,
   postComment,
+  updateArticle,
 } = require("./controller/nc-news.controller");
 const {
   handleCustomErrors,
@@ -26,6 +27,8 @@ app.get("/api/articles", getAllArticles);
 app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
 app.post("/api/articles/:article_id/comments", postComment);
+
+app.patch("/api/articles/:article_id", updateArticle);
 
 app.use((req, res, next) => {
   const err = { status: 404, msg: "404 Not Found" };
