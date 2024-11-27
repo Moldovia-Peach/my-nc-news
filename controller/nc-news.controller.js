@@ -7,6 +7,7 @@ const {
   addComment,
   updateArticleVotes,
   removeCommentById,
+  fetchAllUsers,
 } = require("../model/nc-news.model");
 
 function getApi(req, res) {
@@ -129,6 +130,14 @@ function deleteCommentById(req, res, next) {
     .catch(next);
 }
 
+function getAllUsers(req, res, next) {
+  fetchAllUsers()
+    .then((users) => {
+      res.status(200).send({ users });
+    })
+    .catch(next);
+}
+
 module.exports = {
   getApi,
   getTopics,
@@ -138,4 +147,5 @@ module.exports = {
   postComment,
   updateArticle,
   deleteCommentById,
+  getAllUsers,
 };
