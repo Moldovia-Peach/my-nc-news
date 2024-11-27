@@ -54,9 +54,48 @@ function fetchCommentsByArticleId(article_id) {
     });
 }
 
+function addComment(article_id, username, body) {
+  if (!username || !body) {
+    return Promise.reject({
+      status: 400,
+      msg: "Username and body are required",
+    });
+  }
+
+  return db
+    .query("SELECT * FROM users WHERE username = $1", [username])
+    .then((userResult) => {
+      if (userResult.rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: "Username does not exist",
+        });
+      }
+
+      return db.query("SELECT * FROM articles WHERE article_id = $1", [
+        article_id,
+      ]);
+    })
+    .then((articleResult) => {
+      if (articleResult.rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          msg: `Article with id ${article_id} not found`,
+        });
+      }
+
+      return db.query(
+        "INSERT INTO comments (article_id, author, body) VALUES ($1, $2, $3) RETURNING *",
+        [article_id, username, body]
+      );
+    })
+    .then((result) => result.rows[0]);
+}
+
 module.exports = {
   fetchTopics,
   fetchArticleById,
   fetchAllArticles,
   fetchCommentsByArticleId,
+  addComment,
 };
