@@ -132,19 +132,51 @@ describe("GET /api/articles", () => {
 });
 
 describe("GET /api/articles/:article_id/comments", () => {
+  test("200: comments array has expected properties", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body }) => {
+        body.comments.forEach((comment) => {
+          expect(comment).toHaveProperty("comment_id");
+          expect(comment).toHaveProperty("votes");
+          expect(comment).toHaveProperty("created_at");
+          expect(comment).toHaveProperty("author");
+          expect(comment).toHaveProperty("body");
+          expect(comment).toHaveProperty("article_id");
+        });
+      });
+  });
+
   test("200: responds with array of comments for the article", () => {
     return request(app)
       .get("/api/articles/1/comments")
       .expect(200)
       .then(({ body }) => {
         expect(Array.isArray(body.comments)).toBe(true);
-        expect(body.comments.length).toBeGreaterThan(0);
-        expect(body.comments[0]).toHaveProperty("comment_id");
-        expect(body.comments[0]).toHaveProperty("votes");
-        expect(body.comments[0]).toHaveProperty("created_at");
-        expect(body.comments[0]).toHaveProperty("author");
-        expect(body.comments[0]).toHaveProperty("body");
-        expect(body.comments[0]).toHaveProperty("article_id");
+        expect(body.comments.length).toBe(11);
+
+        expect(body.comments[0]).toEqual({
+          comment_id: 5,
+          votes: 0,
+          created_at: "2020-11-03T21:00:00.000Z",
+          author: "icellusedkars",
+          body: "I hate streaming noses",
+          article_id: 1,
+        });
+
+        body.comments.forEach((comment) => {
+          expect(comment.article_id).toBe(1);
+        });
+
+        expect(body.comments[1]).toEqual({
+          comment_id: 2,
+          votes: 14,
+          created_at: "2020-10-31T03:03:00.000Z",
+          author: "butter_bridge",
+          body: "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
+          article_id: 1,
+        });
       });
   });
 
@@ -164,12 +196,21 @@ describe("GET /api/articles/:article_id/comments", () => {
       });
   });
 
-  test("404: responds with an error if no comments are found for the given article_id", () => {
+  test("200: responds with an empty array if article exists but has no comments", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toEqual([]);
+      });
+  });
+
+  test("404: responds with an error if the article does not exist", () => {
     return request(app)
       .get("/api/articles/1000/comments")
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("No comments found for article 1000");
+        expect(body.msg).toBe("Article with id 1000 not found");
       });
   });
 
@@ -190,6 +231,81 @@ describe("GET *", () => {
       .expect(404)
       .then(({ body }) => {
         expect(body.msg).toBe("404 Not Found");
+      });
+  });
+});
+
+describe("POST /api/articles/:article_id/comments", () => {
+  test("201: posts a new comment", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
+      .expect(201)
+      .then((response) => {
+        expect(response.status).toBe(201);
+        expect(response.body.comment).toHaveProperty("comment_id");
+        expect(response.body.comment.author).toBe("butter_bridge");
+        expect(response.body.comment.body).toBe("Wow! This is amazing!");
+      });
+  });
+
+  test("400: returns an error if the request body is empty", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({})
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Username and body are required");
+      });
+  });
+
+  test("400: returns an error if username is missing", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ body: "Wow! This is amazing!" })
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Username and body are required");
+      });
+  });
+
+  test("400: returns an error if comment body is missing", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge" })
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Username and body are required");
+      });
+  });
+
+  test("400: returns an error if the article_id is invalid", () => {
+    return request(app)
+      .post("/api/articles/notAnId/comments")
+      .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid article id format");
+      });
+  });
+
+  test("404: returns an error if the article does not exist", () => {
+    return request(app)
+      .post("/api/articles/1000/comments")
+      .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Article with id 1000 not found");
+      });
+  });
+
+  test("404: returns an error if the username does not exist", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "nonexistent_user", body: "Wow! This is amazing!" })
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Username does not exist");
       });
   });
 });

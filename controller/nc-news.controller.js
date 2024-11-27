@@ -4,6 +4,7 @@ const {
   fetchArticleById,
   fetchAllArticles,
   fetchCommentsByArticleId,
+  addComment,
 } = require("../model/nc-news.model");
 
 function getApi(req, res) {
@@ -56,19 +57,42 @@ function getAllArticles(req, res, next) {
     .catch(next);
 }
 
-function getCommentsByArticeId(req, res, next) {
+function getCommentsByArticleId(req, res, next) {
   const { article_id } = req.params;
+
   if (isNaN(Number(article_id))) {
     handleError(400, "Invalid article id format", next);
     return;
   }
-  fetchCommentsByArticleId(article_id)
-    .then((comments) => {
-      if (!comments || comments.length === 0) {
-        handleError(404, `No comments found for article ${article_id}`, next);
+  
+  const promises = [
+    fetchArticleById(article_id),
+    fetchCommentsByArticleId(article_id),
+  ];
+
+  Promise.all(promises)
+    .then(([article, comments]) => {
+      if (!article) {
+        handleError(404, `Article with id ${article_id} not found`, next);
         return;
       }
       res.status(200).send({ comments });
+    })
+    .catch(next);
+}
+
+function postComment(req, res, next) {
+  const { article_id } = req.params;
+  const { username, body } = req.body;
+
+  if (isNaN(Number(article_id))) {
+    handleError(400, "Invalid article id format", next);
+    return;
+  }
+
+  addComment(article_id, username, body)
+    .then((comment) => {
+      res.status(201).send({ comment });
     })
     .catch(next);
 }
@@ -78,5 +102,6 @@ module.exports = {
   getTopics,
   getArticleById,
   getAllArticles,
-  getCommentsByArticeId,
+  getCommentsByArticleId,
+  postComment,
 };
