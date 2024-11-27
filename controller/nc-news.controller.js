@@ -5,6 +5,7 @@ const {
   fetchAllArticles,
   fetchCommentsByArticleId,
   addComment,
+  updateArticleVotes,
 } = require("../model/nc-news.model");
 
 function getApi(req, res) {
@@ -64,7 +65,7 @@ function getCommentsByArticleId(req, res, next) {
     handleError(400, "Invalid article id format", next);
     return;
   }
-  
+
   const promises = [
     fetchArticleById(article_id),
     fetchCommentsByArticleId(article_id),
@@ -97,6 +98,21 @@ function postComment(req, res, next) {
     .catch(next);
 }
 
+function updateArticle(req, res, next) {
+  const { article_id } = req.params;
+  const { inc_votes } = req.body;
+
+  if (typeof inc_votes !== "number" || isNaN(inc_votes)) {
+    handleError(400, "Invalid vote value", next);
+    return;
+  }
+  updateArticleVotes(article_id, inc_votes)
+    .then((updatedArticle) => {
+      res.status(200).send({ article: updatedArticle });
+    })
+    .catch(next);
+}
+
 module.exports = {
   getApi,
   getTopics,
@@ -104,4 +120,5 @@ module.exports = {
   getAllArticles,
   getCommentsByArticleId,
   postComment,
+  updateArticle,
 };
