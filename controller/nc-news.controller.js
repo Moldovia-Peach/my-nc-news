@@ -6,6 +6,7 @@ const {
   fetchCommentsByArticleId,
   addComment,
   updateArticleVotes,
+  removeCommentById,
 } = require("../model/nc-news.model");
 
 function getApi(req, res) {
@@ -113,6 +114,21 @@ function updateArticle(req, res, next) {
     .catch(next);
 }
 
+function deleteCommentById(req, res, next) {
+  const { comment_id } = req.params;
+
+  if (isNaN(Number(comment_id))) {
+    handleError(400, "Invalid comment id format", next);
+    return;
+  }
+
+  removeCommentById(comment_id)
+    .then(() => {
+      res.status(204).send();
+    })
+    .catch(next);
+}
+
 module.exports = {
   getApi,
   getTopics,
@@ -121,4 +137,5 @@ module.exports = {
   getCommentsByArticleId,
   postComment,
   updateArticle,
+  deleteCommentById,
 };
