@@ -121,6 +121,14 @@ function removeCommentById(comment_id) {
     });
 }
 
+function fetchAllUsers() {
+  return db
+    .query(`SELECT username, name, avatar_url FROM users;`)
+    .then(({ rows }) => {
+      return rows;
+    });
+}
+
 module.exports = {
   fetchTopics,
   fetchArticleById,
@@ -129,4 +137,5 @@ module.exports = {
   addComment,
   updateArticleVotes,
   removeCommentById,
+  fetchAllUsers,
 };
