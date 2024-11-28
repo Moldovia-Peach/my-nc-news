@@ -6,13 +6,15 @@ const {
   getAllArticles,
   getCommentsByArticleId,
   postComment,
-  updateArticle,
+  patchArticle,
   deleteCommentById,
   getAllUsers,
 } = require("./controller/nc-news.controller");
 const {
   handleCustomErrors,
   handleServerErrors,
+  handlePsqlErrors,
+  handleUnmatchedEndpoints,
 } = require("./errors/errorHandling");
 
 const app = express();
@@ -30,18 +32,15 @@ app.get("/api/articles/:article_id/comments", getCommentsByArticleId);
 
 app.post("/api/articles/:article_id/comments", postComment);
 
-app.patch("/api/articles/:article_id", updateArticle);
+app.patch("/api/articles/:article_id", patchArticle);
 
 app.delete("/api/comments/:comment_id", deleteCommentById);
 
 app.get("/api/users", getAllUsers);
 
-app.use((req, res, next) => {
-  const err = { status: 404, msg: "404 Not Found" };
-  next(err);
-});
-
 app.use(handleCustomErrors);
+app.use(handlePsqlErrors);
+app.use(handleUnmatchedEndpoints);
 app.use(handleServerErrors);
 
 module.exports = app;
