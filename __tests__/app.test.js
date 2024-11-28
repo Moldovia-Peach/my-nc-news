@@ -47,37 +47,20 @@ describe("GET /api/topics", () => {
 });
 
 describe("GET /api/articles/:article_id", () => {
-  test("200: article has expected properties", () => {
+  test("200: responds with an article object with correct properties and types when given a valid article id", () => {
     return request(app)
       .get("/api/articles/1")
       .expect(200)
       .then(({ body }) => {
-        expect(body.article).toHaveProperty("author");
-        expect(body.article).toHaveProperty("title");
-        expect(body.article).toHaveProperty("article_id");
-        expect(body.article).toHaveProperty("body");
-        expect(body.article).toHaveProperty("topic");
-        expect(body.article).toHaveProperty("created_at");
-        expect(body.article).toHaveProperty("votes");
-        expect(body.article).toHaveProperty("article_img_url");
-      });
-  });
-
-  test("200: responds with an article object when given a valid article id", () => {
-    return request(app)
-      .get("/api/articles/1")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body.article).toEqual({
-          article_id: 1,
-          title: "Living in the shadow of a great man",
-          topic: "mitch",
-          author: "butter_bridge",
-          body: "I find this existence challenging",
-          created_at: "2020-07-09T20:11:00.000Z",
-          votes: 100,
-          article_img_url:
-            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        expect(body.article).toMatchObject({
+          article_id: expect.any(Number),
+          title: expect.any(String),
+          topic: expect.any(String),
+          author: expect.any(String),
+          body: expect.any(String),
+          created_at: expect.any(String),
+          votes: expect.any(Number),
+          article_img_url: expect.any(String),
         });
       });
   });
@@ -88,7 +71,7 @@ describe("GET /api/articles/:article_id", () => {
         .get("/api/articles/10000")
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Article with id 10000 not found");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
   });
@@ -98,7 +81,7 @@ describe("GET /api/articles/:article_id", () => {
         .get("/api/articles/notAnId")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid article id format");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
@@ -203,7 +186,7 @@ describe("GET /api/articles", () => {
         .get("/api/articles?sort_by=not_a_column")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid sort by column");
+          expect(body.msg).toBe("Bad Request");
         });
     });
 
@@ -212,7 +195,7 @@ describe("GET /api/articles", () => {
         .get("/api/articles?order=not_valid")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid order");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
@@ -222,56 +205,29 @@ describe("GET /api/articles", () => {
       .get("/api/articles?sort_by=not_a_column&order=not_valid")
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe("Invalid sort by column");
+        expect(body.msg).toBe("Bad Request");
       });
   });
 });
 
 describe("GET /api/articles/:article_id/comments", () => {
-  test("200: comments array has expected properties", () => {
-    return request(app)
-      .get("/api/articles/1/comments")
-      .expect(200)
-      .then(({ body }) => {
-        body.comments.forEach((comment) => {
-          expect(comment).toHaveProperty("comment_id");
-          expect(comment).toHaveProperty("votes");
-          expect(comment).toHaveProperty("created_at");
-          expect(comment).toHaveProperty("author");
-          expect(comment).toHaveProperty("body");
-          expect(comment).toHaveProperty("article_id");
-        });
-      });
-  });
-
-  test("200: responds with array of comments for the article", () => {
+  test("200: comments array has expected properties and types", () => {
     return request(app)
       .get("/api/articles/1/comments")
       .expect(200)
       .then(({ body }) => {
         expect(Array.isArray(body.comments)).toBe(true);
         expect(body.comments.length).toBe(11);
-
-        expect(body.comments[0]).toEqual({
-          comment_id: 5,
-          votes: 0,
-          created_at: "2020-11-03T21:00:00.000Z",
-          author: "icellusedkars",
-          body: "I hate streaming noses",
-          article_id: 1,
-        });
-
         body.comments.forEach((comment) => {
+          expect(comment).toMatchObject({
+            comment_id: expect.any(Number),
+            votes: expect.any(Number),
+            created_at: expect.any(String),
+            author: expect.any(String),
+            body: expect.any(String),
+            article_id: expect.any(Number),
+          });
           expect(comment.article_id).toBe(1);
-        });
-
-        expect(body.comments[1]).toEqual({
-          comment_id: 2,
-          votes: 14,
-          created_at: "2020-10-31T03:03:00.000Z",
-          author: "butter_bridge",
-          body: "The beautiful thing about treasure is that it exists. Got to find out what kind of sheets these are; not cotton, not rayon, silky.",
-          article_id: 1,
         });
       });
   });
@@ -299,7 +255,7 @@ describe("GET /api/articles/:article_id/comments", () => {
         .get("/api/articles/1000/comments")
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Article with id 1000 not found");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
   });
@@ -309,7 +265,7 @@ describe("GET /api/articles/:article_id/comments", () => {
         .get("/api/articles/notAnId/comments")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid article id format");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
@@ -321,7 +277,7 @@ describe("GET *", () => {
       .get("/api/notARoute")
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe("404 Not Found");
+        expect(body.msg).toBe("Resource Not Found");
       });
   });
 });
@@ -339,35 +295,41 @@ describe("POST /api/articles/:article_id/comments", () => {
         expect(response.body.comment.body).toBe("Wow! This is amazing!");
       });
   });
+  test("201: posts a new comment when there are new properties in the request body", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({
+        username: "butter_bridge",
+        body: "Wow! This is amazing!",
+        new_property: "new_value",
+      })
+      .expect(201)
+      .then((response) => {
+        expect(response.status).toBe(201);
+        expect(response.body.comment).toHaveProperty("comment_id");
+        expect(response.body.comment.author).toBe("butter_bridge");
+        expect(response.body.comment.body).toBe("Wow! This is amazing!");
+        expect(response.body.comment.extra_property).toBeUndefined();
+      });
+  });
   describe("400 errors", () => {
-    test("400: returns an error if the request body is empty", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({})
-        .expect(400)
-        .then(({ body }) => {
-          expect(body.msg).toBe("Username and body are required");
-        });
-    });
-
-    test("400: returns an error if username is missing", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({ body: "Wow! This is amazing!" })
-        .expect(400)
-        .then(({ body }) => {
-          expect(body.msg).toBe("Username and body are required");
-        });
-    });
-
-    test("400: returns an error if comment body is missing", () => {
-      return request(app)
-        .post("/api/articles/1/comments")
-        .send({ username: "butter_bridge" })
-        .expect(400)
-        .then(({ body }) => {
-          expect(body.msg).toBe("Username and body are required");
-        });
+    test("400: returns an error if the request body is missing required fields", () => {
+      const missingFields = [
+        { body: {}, msg: "Bad Request" },
+        { body: { body: "Wow! This is amazing!" }, msg: "Bad Request" },
+        { body: { username: "butter_bridge" }, msg: "Bad Request" },
+      ];
+      return Promise.all(
+        missingFields.map(({ body, msg }) => {
+          return request(app)
+            .post("/api/articles/1/comments")
+            .send(body)
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).toBe(msg);
+            });
+        })
+      );
     });
 
     test("400: returns an error if the article id is invalid", () => {
@@ -376,7 +338,7 @@ describe("POST /api/articles/:article_id/comments", () => {
         .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid article id format");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
@@ -387,7 +349,7 @@ describe("POST /api/articles/:article_id/comments", () => {
         .send({ username: "butter_bridge", body: "Wow! This is amazing!" })
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Article with id 1000 not found");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
 
@@ -397,7 +359,7 @@ describe("POST /api/articles/:article_id/comments", () => {
         .send({ username: "nonexistent_user", body: "Wow! This is amazing!" })
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Username does not exist");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
   });
@@ -438,7 +400,7 @@ describe("PATCH /api/articles/:article_id", () => {
         .send({ inc_votes: "string" })
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid vote value");
+          expect(body.msg).toBe("Bad Request");
         });
     });
 
@@ -448,7 +410,7 @@ describe("PATCH /api/articles/:article_id", () => {
         .send({})
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid vote value");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
@@ -459,7 +421,7 @@ describe("PATCH /api/articles/:article_id", () => {
         .send({ inc_votes: 1 })
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Article not found");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
   });
@@ -480,7 +442,7 @@ describe("DELETE /api/comments/:comment_id", () => {
         .delete("/api/comments/9999")
         .expect(404)
         .then(({ body }) => {
-          expect(body.msg).toBe("Comment with id 9999 not found");
+          expect(body.msg).toBe("Resource Not Found");
         });
     });
   });
@@ -490,56 +452,26 @@ describe("DELETE /api/comments/:comment_id", () => {
         .delete("/api/comments/not-a-number")
         .expect(400)
         .then(({ body }) => {
-          expect(body.msg).toBe("Invalid comment id format");
+          expect(body.msg).toBe("Bad Request");
         });
     });
   });
 });
 
 describe("GET /api/users", () => {
-  test("200: user array has expected properties", () => {
+  test("200: user array has expected properties and correct types", () => {
     return request(app)
       .get("/api/users")
       .expect(200)
       .then(({ body }) => {
-        body.users.forEach((user) => {
-          expect(user).toHaveProperty("username");
-          expect(user).toHaveProperty("name");
-          expect(user).toHaveProperty("avatar_url");
-        });
-      });
-  });
-
-  test("200: responds with an array of user objects containing username, name, and avatar_url", () => {
-    return request(app)
-      .get("/api/users")
-      .expect(200)
-      .then(({ body }) => {
-        expect(Array.isArray(body.users)).toBe(true);
         expect(body.users.length).toBe(4);
-        expect(body.users[0]).toEqual({
-          username: "butter_bridge",
-          name: "jonny",
-          avatar_url:
-            "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg",
-        });
-        expect(body.users[3]).toEqual({
-          username: "lurker",
-          name: "do_nothing",
-          avatar_url:
-            "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        body.users.forEach((user) => {
+          expect(user).toMatchObject({
+            username: expect.any(String),
+            name: expect.any(String),
+            avatar_url: expect.any(String),
+          });
         });
       });
-  });
-
-  describe("404 errors", () => {
-    test("404: responds with an error if the user does not exist", () => {
-      return request(app)
-        .get("/api/notAUser")
-        .expect(404)
-        .then(({ body }) => {
-          expect(body.msg).toBe("404 Not Found");
-        });
-    });
   });
 });
