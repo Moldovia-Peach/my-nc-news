@@ -1,4 +1,5 @@
 const request = require("supertest");
+require("jest-sorted");
 const app = require("../app");
 const endpointsJson = require("../endpoints.json");
 const seed = require("../db/seeds/seed");
@@ -25,7 +26,7 @@ describe("GET /api", () => {
 });
 
 describe("GET /api/topics", () => {
-  test("200: responds with an array of topic objects, each containing slug and description", () => {
+  test("200: responds with an array of topic objects, each containing a slug and description", () => {
     return request(app)
       .get("/api/topics")
       .expect(200)
@@ -46,7 +47,7 @@ describe("GET /api/topics", () => {
 });
 
 describe("GET /api/articles/:article_id", () => {
-  test("200: responds with an article object when given valid article id", () => {
+  test("200: article has expected properties", () => {
     return request(app)
       .get("/api/articles/1")
       .expect(200)
@@ -61,6 +62,26 @@ describe("GET /api/articles/:article_id", () => {
         expect(body.article).toHaveProperty("article_img_url");
       });
   });
+
+  test("200: responds with an article object when given a valid article id", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.article).toEqual({
+          article_id: 1,
+          title: "Living in the shadow of a great man",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "I find this existence challenging",
+          created_at: "2020-07-09T20:11:00.000Z",
+          votes: 100,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        });
+      });
+  });
+
   describe("404 errors", () => {
     test("404: responds with an error when trying to get an article id that does not exist", () => {
       return request(app)
@@ -84,54 +105,125 @@ describe("GET /api/articles/:article_id", () => {
 });
 
 describe("GET /api/articles", () => {
-  test("200: responds with an array of articles containing the correct properties", () => {
+  test("200: filters articles by topic", () => {
+    return request(app)
+      .get("/api/articles?topic=technology")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.articles).toBeInstanceOf(Array);
+        body.articles.forEach((article) => {
+          expect(article.topic).toBe("technology");
+        });
+      });
+  });
+
+  test("200: returns an empty array if the topic does not exist", () => {
+    return request(app)
+      .get("/api/articles?topic=nonexistent")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.articles).toEqual([]);
+      });
+  });
+  test("200: responds with articles sorted by created at in descending order by default", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
       .then(({ body }) => {
-        expect(Array.isArray(body.articles)).toBe(true);
-        expect(body.articles).toHaveLength(13);
-        body.articles.forEach((article) => {
-          expect(article).toEqual(
-            expect.objectContaining({
-              article_id: expect.any(Number),
-              author: expect.any(String),
-              title: expect.any(String),
-              topic: expect.any(String),
-              created_at: expect.any(String),
-              votes: expect.any(Number),
-              article_img_url: expect.any(String),
-              comment_count: expect.any(Number),
-            })
-          );
-        });
+        expect(body.articles).toBeSortedBy("created_at", { descending: true });
       });
   });
-  test("200: responds with articles sorted by created_at in descending order", () => {
-    return request(app)
-      .get("/api/articles")
-      .then((response) => {
-        const body = response.body;
-        for (let i = 0; i < body.articles.length - 1; i++) {
-          const currentArticleDate = new Date(
-            body.articles[i].created_at
-          ).getTime();
-          const nextArticleDate = new Date(
-            body.articles[i + 1].created_at
-          ).getTime();
-          expect(currentArticleDate).toBeGreaterThanOrEqual(nextArticleDate);
-        }
-      });
-  });
-  describe("400 errors", () => {
-    test("400: responds with error when invalid query parameters are passed", () => {
+
+  describe("200: sorting and ordering articles", () => {
+    test("200: sorts by title in ascending order", () => {
       return request(app)
-        .get("/api/articles?sort=invalid")
-        .then((response) => {
-          expect(response.status).toBe(400);
-          expect(response.body.msg).toBe("Invalid query parameter");
+        .get("/api/articles?sort_by=title&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("title", { ascending: true });
         });
     });
+
+    test("200: sorts by votes in descending order", () => {
+      return request(app)
+        .get("/api/articles?sort_by=votes")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("votes", { descending: true });
+        });
+    });
+
+    test("200: sorts by author in ascending order", () => {
+      return request(app)
+        .get("/api/articles?sort_by=author&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("author", { ascending: true });
+        });
+    });
+
+    test("200: sorts by comment count in descending order", () => {
+      return request(app)
+        .get("/api/articles?sort_by=comment_count")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeSortedBy("comment_count", {
+            descending: true,
+          });
+        });
+    });
+  });
+
+  describe("200: filtering topics", () => {
+    test("200: filters articles by topic", () => {
+      return request(app)
+        .get("/api/articles?topic=technology")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeInstanceOf(Array);
+          body.articles.forEach((article) => {
+            expect(article.topic).toBe("technology");
+          });
+        });
+    });
+
+    test("200: returns an empty array if the topic does not exist", () => {
+      return request(app)
+        .get("/api/articles?topic=nonexistent")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toEqual([]);
+        });
+    });
+  });
+
+  describe("400 errors", () => {
+    test("400: responds with an error when given an invalid sort by column", () => {
+      return request(app)
+        .get("/api/articles?sort_by=not_a_column")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid sort by column");
+        });
+    });
+
+    test("400: responds with an error when given an invalid order query", () => {
+      return request(app)
+        .get("/api/articles?order=not_valid")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Invalid order");
+        });
+    });
+  });
+
+  test("400: responds with error when sort by and order queries are invalid", () => {
+    return request(app)
+      .get("/api/articles?sort_by=not_a_column&order=not_valid")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid sort by column");
+      });
   });
 });
 
@@ -189,14 +281,7 @@ describe("GET /api/articles/:article_id/comments", () => {
       .get("/api/articles/1/comments")
       .expect(200)
       .then(({ body }) => {
-        const comments = body.comments;
-        for (let i = 0; i < comments.length - 1; i++) {
-          const currentCommentDate = new Date(comments[i].created_at).getTime();
-          const nextCommentDate = new Date(
-            comments[i + 1].created_at
-          ).getTime();
-          expect(currentCommentDate).toBeGreaterThanOrEqual(nextCommentDate);
-        }
+        expect(body.comments).toBeSortedBy("created_at", { descending: true });
       });
   });
 
@@ -285,7 +370,7 @@ describe("POST /api/articles/:article_id/comments", () => {
         });
     });
 
-    test("400: returns an error if the article_id is invalid", () => {
+    test("400: returns an error if the article id is invalid", () => {
       return request(app)
         .post("/api/articles/notAnId/comments")
         .send({ username: "butter_bridge", body: "Wow! This is amazing!" })

@@ -10,8 +10,13 @@
     }
   },
   "GET /api/articles": {
-    "description": "serves an array of all articles",
-    "queries": ["author", "topic", "sort_by", "order"],
+    "description": "serves an array of all articles. Articles can be filtered by topic or author and sorted by query parameters",
+    "queries": {
+      "author": "filters articles by the username of the author", 
+      "topic": "filters articles by topic",
+      "sort_by": "sorts articles by any valid column",
+      "order": "orders articles in ascending or descending order"
+    },
     "exampleResponse": {
       "articles": [
         {
@@ -25,7 +30,11 @@
         }
       ],
       "errors": {
-        "400": "responds with an error if invalid query parameters are passed"
+        "400": [
+          "responds with an error when given an invalid sort by column",
+          "responds with an error when given an invalid order query",
+          "responds with an error when sort by and order queries are invalid"
+        ]
       }
     }
   },

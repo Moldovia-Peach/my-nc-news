@@ -44,20 +44,19 @@ function getArticleById(req, res, next) {
 }
 
 function getAllArticles(req, res, next) {
-  const { sort } = req.query;
-  if (sort && !["created_at", "title", "votes"].includes(sort)) {
-    handleError(400, "Invalid query parameter", next);
-    return;
-  }
-  fetchAllArticles()
+  const { sort_by = "created_at", order = "desc", topic } = req.query;
+
+  fetchAllArticles(sort_by, order, topic)
     .then((articles) => {
-      if (!articles || articles.length === 0) {
-        handleError(404, "No articles found", next);
-        return;
-      }
       res.status(200).send({ articles });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.status && err.msg) {
+        res.status(err.status).send({ msg: err.msg });
+      } else {
+        next(err);
+      }
+    });
 }
 
 function getCommentsByArticleId(req, res, next) {
