@@ -45,15 +45,10 @@ You will need two **.env** files to configure your local database:
 
 - **.env.development:** For local development.
 
-```
-PGDATABASE=nc_news
-
-```
-
 - **.env.test:** For running tests.
 
 ```
-PGDATABASE=nc_news_test
+npm run setup-dbs
 
 ```
 
