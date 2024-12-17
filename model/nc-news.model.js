@@ -17,6 +17,7 @@ function fetchArticleById(article_id) {
       SELECT 
         articles.article_id,
         articles.title,
+        articles.body,
         articles.topic,
         articles.author,
         articles.created_at,
